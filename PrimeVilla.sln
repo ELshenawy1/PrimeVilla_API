@@ -1,9 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.12.35707.178 d17.12
+VisualStudioVersion = 17.12.35707.178
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PrimeVilla_VillaAPI", "PrimeVilla_VillaAPI\PrimeVilla_VillaAPI.csproj", "{7A14E6FD-F2FD-4678-8A32-5F9A70D60737}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PrimeVilla_Web", "PrimeVilla_Web\PrimeVilla_Web.csproj", "{0D2FEE37-E3F2-4C78-95CF-5AC0545644C4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PrimeVilla_Utility", "PrimeVilla_Utility\PrimeVilla_Utility.csproj", "{C815B5E1-143B-4ABA-ADDD-A3D52D31C5A0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +19,14 @@ Global
 		{7A14E6FD-F2FD-4678-8A32-5F9A70D60737}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7A14E6FD-F2FD-4678-8A32-5F9A70D60737}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7A14E6FD-F2FD-4678-8A32-5F9A70D60737}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0D2FEE37-E3F2-4C78-95CF-5AC0545644C4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0D2FEE37-E3F2-4C78-95CF-5AC0545644C4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0D2FEE37-E3F2-4C78-95CF-5AC0545644C4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0D2FEE37-E3F2-4C78-95CF-5AC0545644C4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C815B5E1-143B-4ABA-ADDD-A3D52D31C5A0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C815B5E1-143B-4ABA-ADDD-A3D52D31C5A0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C815B5E1-143B-4ABA-ADDD-A3D52D31C5A0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C815B5E1-143B-4ABA-ADDD-A3D52D31C5A0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

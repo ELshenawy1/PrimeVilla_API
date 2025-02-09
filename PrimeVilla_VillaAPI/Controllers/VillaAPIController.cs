@@ -29,7 +29,6 @@ namespace PrimeVilla_VillaAPI.Controllers
             this._response = new();
         }
 
-        [Authorize]
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -52,7 +51,6 @@ namespace PrimeVilla_VillaAPI.Controllers
             return _response;
         }
 
-        [Authorize(Roles = "admin")]
         [HttpGet("{id:int}", Name = "GetVilla")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -89,6 +87,8 @@ namespace PrimeVilla_VillaAPI.Controllers
             return _response;
         }
 
+
+        [Authorize(Roles = "admin")]
         [HttpPost]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -126,7 +126,7 @@ namespace PrimeVilla_VillaAPI.Controllers
             return _response;
         }
 
-        [Authorize(Roles = "CUSTOM")]
+        [Authorize(Roles = "admin")]
         [HttpDelete("{id:int}", Name = "DeleteVilla")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -161,7 +161,7 @@ namespace PrimeVilla_VillaAPI.Controllers
             return _response;
         }
 
-        [Authorize]
+        [Authorize(Roles = "admin")]
         [HttpPut("{id:int}", Name = "UpdateVilla")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -194,6 +194,7 @@ namespace PrimeVilla_VillaAPI.Controllers
             return _response;
         }
 
+        [Authorize(Roles = "admin")]
         [HttpPatch("{id:int}", Name = "UpdatePartialVilla")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]

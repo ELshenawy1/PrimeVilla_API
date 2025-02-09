@@ -14,50 +14,55 @@ namespace PrimeVilla_Web.Services
             _clientFactory = clientFactory; 
             villaUrl = configuration.GetValue<string>("SerivceUrls:VillaAPI");
         }
-        public Task<T> CreateAsync<T>(VillaNumberCreateDTO dto)
+        public Task<T> CreateAsync<T>(VillaNumberCreateDTO dto, string token)
         {
             return SendAsync<T>(new APIRequest()
             {
                 ApiType = SD.ApiType.Post,
                 Data = dto,
-                Url = villaUrl + "/api/VillaNumberAPI"
+                Url = villaUrl + "/api/VillaNumberAPI",
+                Token = token
             });
         }
 
-        public Task<T> DeleteAsync<T>(int id)
+        public Task<T> DeleteAsync<T>(int id, string token)
         {
             return SendAsync<T>(new APIRequest()
             {
                 ApiType = SD.ApiType.Delete,
-                Url = villaUrl + "/api/VillaNumberApi/" + id
+                Url = villaUrl + "/api/VillaNumberApi/" + id,
+                Token = token
             });
         }
 
-        public Task<T> GetAllAsync<T>()
+        public Task<T> GetAllAsync<T>(string token)
         {
             return SendAsync<T>(new APIRequest()
             {
                 ApiType = SD.ApiType.Get,
-                Url = villaUrl + "/api/VillaNumberApi"
+                Url = villaUrl + "/api/VillaNumberApi",
+                Token = token
             });
         }
 
-        public Task<T> GetAsync<T>(int id)
+        public Task<T> GetAsync<T>(int id, string token)
         {
             return SendAsync<T>(new APIRequest()
             {
                 ApiType = SD.ApiType.Get,
-                Url = villaUrl + "/api/VillaNumberApi/" + id
+                Url = villaUrl + "/api/VillaNumberApi/" + id,
+                Token = token
             });
         }
 
-        public Task<T> UpdateAsync<T>(VillaNumberUpdateDTO dto)
+        public Task<T> UpdateAsync<T>(VillaNumberUpdateDTO dto, string token)
         {
             return SendAsync<T>(new APIRequest()
             {
                 ApiType = SD.ApiType.Put,
                 Data = dto,
-                Url = villaUrl + "/api/VillaNumberApi/" + dto.VillaNo
+                Url = villaUrl + "/api/VillaNumberApi/" + dto.VillaNo,
+                Token = token
             });
         }
     }

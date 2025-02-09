@@ -1,6 +1,7 @@
 using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
+using PrimeVilla_Utility;
 using PrimeVilla_Web.Models;
 using PrimeVilla_Web.Models.DTO;
 using PrimeVilla_Web.Services.IServices;
@@ -21,7 +22,7 @@ namespace PrimeVilla_Web.Controllers
         {
             List<VillaDTO> list = new();
 
-            var response = await _villaService.GetAllAsync<APIResponse>();
+            var response = await _villaService.GetAllAsync<APIResponse>(HttpContext.Session.GetString(SD.SessionToken));
 
             if (response != null && response.IsSuccess)
             {

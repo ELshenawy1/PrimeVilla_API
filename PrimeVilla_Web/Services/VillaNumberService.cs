@@ -20,7 +20,7 @@ namespace PrimeVilla_Web.Services
             {
                 ApiType = SD.ApiType.Post,
                 Data = dto,
-                Url = villaUrl + "/api/VillaNumberAPI",
+                Url = villaUrl + $"/api/{SD.ApiVersion}/VillaNumberAPI",
                 Token = token
             });
         }
@@ -30,7 +30,7 @@ namespace PrimeVilla_Web.Services
             return SendAsync<T>(new APIRequest()
             {
                 ApiType = SD.ApiType.Delete,
-                Url = villaUrl + "/api/VillaNumberApi/" + id,
+                Url = villaUrl + $"/api/{SD.ApiVersion}/VillaNumberApi/" + id,
                 Token = token
             });
         }
@@ -40,7 +40,7 @@ namespace PrimeVilla_Web.Services
             return SendAsync<T>(new APIRequest()
             {
                 ApiType = SD.ApiType.Get,
-                Url = villaUrl + "/api/VillaNumberApi",
+                Url = villaUrl + $"/api/{SD.ApiVersion}/VillaNumberApi",
                 Token = token
             });
         }
@@ -50,7 +50,7 @@ namespace PrimeVilla_Web.Services
             return SendAsync<T>(new APIRequest()
             {
                 ApiType = SD.ApiType.Get,
-                Url = villaUrl + "/api/VillaNumberApi/" + id,
+                Url = villaUrl + $"/api/{SD.ApiVersion}/VillaNumberApi/" + id,
                 Token = token
             });
         }
@@ -61,7 +61,7 @@ namespace PrimeVilla_Web.Services
             {
                 ApiType = SD.ApiType.Put,
                 Data = dto,
-                Url = villaUrl + "/api/VillaNumberApi/" + dto.VillaNo,
+                Url = villaUrl + $"/api/{SD.ApiVersion}/VillaNumberApi/" + dto.VillaNo,
                 Token = token
             });
         }

@@ -7,6 +7,7 @@ using PrimeVilla_Utility;
 using PrimeVilla_Web.Models;
 using PrimeVilla_Web.Models.DTO;
 using PrimeVilla_Web.Services.IServices;
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 
 namespace PrimeVilla_Web.Controllers
@@ -32,9 +33,12 @@ namespace PrimeVilla_Web.Controllers
             {
                 LoginResponseDTO model =  JsonConvert.DeserializeObject<LoginResponseDTO>(Convert.ToString(response.Result));
 
+                var handler = new JwtSecurityTokenHandler();
+                var jwt = handler.ReadJwtToken(model.Token);
+
                 var identity = new ClaimsIdentity(CookieAuthenticationDefaults.AuthenticationScheme);
-                identity.AddClaim(new Claim (ClaimTypes.Name, model.User.UserName));
-                identity.AddClaim(new Claim(ClaimTypes.Role, model.User.Role));
+                identity.AddClaim(new Claim (ClaimTypes.Name, jwt.Claims.FirstOrDefault(u => u.Type == "unique_name").Value));
+                identity.AddClaim(new Claim(ClaimTypes.Role, jwt.Claims.FirstOrDefault(u=>u.Type == "role").Value));
                 var principal = new ClaimsPrincipal(identity);
                 await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal);
 
@@ -60,7 +64,7 @@ namespace PrimeVilla_Web.Controllers
             APIResponse result = await _authService.RegisterAsync<APIResponse>(obj);
             if(result != null && result.IsSuccess)
             {
-                RedirectToAction(nameof(Login));
+                return RedirectToAction("Login");
             }
             return View();
         }

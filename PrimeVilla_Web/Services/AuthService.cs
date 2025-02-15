@@ -21,7 +21,7 @@ namespace PrimeVilla_Web.Services
             {
                 ApiType = SD.ApiType.Post,
                 Data = obj,
-                Url = villaUrl + "/api/UserAuth/Login"
+                Url = villaUrl + $"/api/{SD.ApiVersion}/UserAuth/Login"
             });
         }
 
@@ -31,7 +31,7 @@ namespace PrimeVilla_Web.Services
             {
                 ApiType = SD.ApiType.Post,
                 Data = obj,
-                Url = villaUrl + "/api/UserAuth/Register"
+                Url = villaUrl + $"/api/{SD.ApiVersion}/UserAuth/Register"
             });
         }
     }

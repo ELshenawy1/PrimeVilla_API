@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Asp.Versioning;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using PrimeVilla_VillaAPI.Models;
 using PrimeVilla_VillaAPI.Models.DTO;
@@ -8,10 +9,11 @@ using System.Net;
 
 namespace PrimeVilla_VillaAPI.Controllers
 {
-    [Route("api/UserAuth")]
+    [Route("api/v{version:apiVersion}/UserAuth")]
     [ApiController]
+    [ApiVersionNeutral]
     public class UsersController : ControllerBase
-    {
+    {   
         private IUserRepository _userRepo;
         protected APIResponse _response;
         public UsersController(IUserRepository userRepo)

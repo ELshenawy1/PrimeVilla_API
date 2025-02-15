@@ -15,7 +15,7 @@ namespace PrimeVilla_VillaAPI.Repository
         public VillaRepository(ApplicationDbContext db): base(db)
         {
             _db = db;
-        }
+        }   
         public async Task<Villa> UpdateAsync(Villa entity)
         {
             entity.UpdatedDate = DateTime.Now;

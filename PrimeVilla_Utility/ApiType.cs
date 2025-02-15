@@ -10,5 +10,6 @@
             Delete,
         }
         public static string SessionToken = "JWTToken";
+        public static string ApiVersion = "v1";
     }
 }

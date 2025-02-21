@@ -1,22 +1,23 @@
 ﻿using Asp.Versioning;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.ApplicationParts;
-using Microsoft.EntityFrameworkCore;
-using PrimeVilla_VillaAPI.Data;
+using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 using PrimeVilla_VillaAPI.Models;
 using PrimeVilla_VillaAPI.Models.DTO;
 using PrimeVilla_VillaAPI.Repository.IRepository;
+using System.Globalization;
 using System.Net;
 using System.Text.Json;
 
-namespace PrimeVilla_VillaAPI.Controllers
+namespace PrimeVilla_VillaAPI.Controllers.v2
 {
     [Route("api/v{version:apiVersion}/VillaAPI")]
+    [ApiVersion("2.0")]
     [ApiController]
-    [ApiVersion("1.0")]
     public class VillaAPIController : ControllerBase
     {
         private readonly IVillaRepository _dbVilla;
@@ -29,26 +30,26 @@ namespace PrimeVilla_VillaAPI.Controllers
             _dbVilla = dbVilla;
             _logger = logger;
             _mapper = mapper;
-            this._response = new();
+            _response = new();
         }
 
 
         [HttpGet]
-        [ResponseCache(CacheProfileName ="Default30")]
+        //[ResponseCache(CacheProfileName = "Default30")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         public async Task<ActionResult<APIResponse>> GetVillas([FromQuery(Name = "FilterOccupancy")] int occupancy,
-            [FromQuery] string? search, int pageSize = 0, int pageNumber = 1)
+            [FromQuery] string search, int pageSize = 0, int pageNumber = 1)
         {
             try
             {
                 _logger.LogInformation("Getting All Villas");
                 IEnumerable<Villa> villaList;
-                
-                if(occupancy > 0)
+
+                if (occupancy > 0)
                 {
-                    villaList = await _dbVilla.GetAllAsync(v => v.Occupancy == occupancy,pageSize : pageSize ,pageNumber:pageNumber);
+                    villaList = await _dbVilla.GetAllAsync(v => v.Occupancy == occupancy, pageSize: pageSize, pageNumber: pageNumber);
                 }
                 else
                 {
@@ -118,11 +119,10 @@ namespace PrimeVilla_VillaAPI.Controllers
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult<APIResponse>> CreateVilla([FromBody] VillaCreateDTO createDto)
+        public async Task<ActionResult<APIResponse>> CreateVilla([FromForm] VillaCreateDTO createDto)
         {
             try
             {
-
                 if (createDto == null)
                 {
                     return BadRequest(createDto);
@@ -137,6 +137,36 @@ namespace PrimeVilla_VillaAPI.Controllers
                 Villa villa = _mapper.Map<Villa>(createDto);
 
                 await _dbVilla.CreateAsync(villa);
+
+                if (createDto.Image != null)
+                {
+                    string fileName = villa.Id + Path.GetExtension(createDto.Image.FileName);
+                    string filePath = @"wwwroot\ProductImage\" + fileName;
+
+                    var directoryLocation = Path.Combine(Directory.GetCurrentDirectory(), filePath);
+
+                    FileInfo file = new FileInfo(directoryLocation);
+
+                    if (file.Exists)
+                    {
+                        file.Delete();
+                    }
+
+                    using (var fileStream = new FileStream(directoryLocation, FileMode.Create))
+                    {
+                        createDto.Image.CopyTo(fileStream);
+                    }
+
+                    var baseUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host.Value}{HttpContext.Request.PathBase.Value}";
+                    villa.ImageUrl = baseUrl + "/ProductImage/" + fileName;
+                    villa.ImageLocalPath = filePath;
+                }
+                else
+                {
+                    villa.ImageUrl = "https://plcasehold.co/600x400";
+                }
+
+                await _dbVilla.UpdateAsync(villa);
 
                 _response.Result = _mapper.Map<VillaDTO>(villa);
                 _response.StatusCode = HttpStatusCode.Created;
@@ -173,6 +203,19 @@ namespace PrimeVilla_VillaAPI.Controllers
                 {
                     return NotFound();
                 }
+
+                if (!string.IsNullOrEmpty(villa.ImageLocalPath))
+                {
+                    var oldFileDirectory = Path.Combine(Directory.GetCurrentDirectory(), villa.ImageLocalPath);
+
+                    FileInfo file = new FileInfo(oldFileDirectory);
+
+                    if (file.Exists)
+                    {
+                        file.Delete();
+                    }
+                }
+
                 await _dbVilla.RemoveAsync(villa);
                 _response.StatusCode = HttpStatusCode.NoContent;
                 _response.IsSuccess = true;
@@ -192,18 +235,50 @@ namespace PrimeVilla_VillaAPI.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
-        public async Task<ActionResult<APIResponse>> UpdateVilla(int id, [FromBody] VillaUpdateDTO updateDto)
+        public async Task<ActionResult<APIResponse>> UpdateVilla(int id, [FromForm] VillaUpdateDTO updateDto)
         {
             try
             {
-
-
                 if (updateDto == null || id != updateDto.Id)
                 {
                     return BadRequest();
                 }
 
                 Villa model = _mapper.Map<Villa>(updateDto);
+
+                if (updateDto.Image != null)
+                {
+                    if (!string.IsNullOrEmpty(model.ImageLocalPath))
+                    {
+                        var oldFileDirectory = Path.Combine(Directory.GetCurrentDirectory(), model.ImageLocalPath);
+
+                        FileInfo file = new FileInfo(oldFileDirectory);
+
+                        if (file.Exists)
+                        {
+                            file.Delete();
+                        }
+                    }
+
+                    string fileName = updateDto.Id + Path.GetExtension(updateDto.Image.FileName);
+                    string filePath = @"wwwroot\ProductImage\" + fileName;
+
+                    var directoryLocation = Path.Combine(Directory.GetCurrentDirectory(), filePath);
+
+
+                    using (var fileStream = new FileStream(directoryLocation, FileMode.Create))
+                    {
+                        updateDto.Image.CopyTo(fileStream);
+                    }
+
+                    var baseUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host.Value}{HttpContext.Request.PathBase.Value}";
+                    model.ImageUrl = baseUrl + "/ProductImage/" + fileName;
+                    model.ImageLocalPath = filePath;
+                }
+                else
+                {
+                    model.ImageUrl = "https://plcasehold.co/600x400";
+                }
 
                 await _dbVilla.UpdateAsync(model);
 
@@ -254,5 +329,5 @@ namespace PrimeVilla_VillaAPI.Controllers
         }
 
     }
-}
 
+}

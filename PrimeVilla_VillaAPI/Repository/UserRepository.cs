@@ -96,12 +96,11 @@ namespace PrimeVilla_VillaAPI.Repository
                 var result = await _userManager.CreateAsync(user,registerationRequestDTO.Password);
                 if (result.Succeeded)
                 {
-                    if (!await _roleManager.RoleExistsAsync("admin"))
+                    if (!await _roleManager.RoleExistsAsync(registerationRequestDTO.Role))
                     {
-                        await _roleManager.CreateAsync(new IdentityRole("admin"));
-                        await _roleManager.CreateAsync(new IdentityRole("customer"));
+                        await _roleManager.CreateAsync(new IdentityRole(registerationRequestDTO.Role));
                     }
-                    await _userManager.AddToRoleAsync(user, "admin");
+                    await _userManager.AddToRoleAsync(user, registerationRequestDTO.Role);
                     var userToReturn = _db.ApplicationUsers.FirstOrDefault(u => u.UserName == registerationRequestDTO.UserName);
                     return _mapper.Map<UserDTO>(userToReturn);
                 }

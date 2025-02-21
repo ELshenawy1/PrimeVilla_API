@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Newtonsoft.Json;
 using PrimeVilla_Utility;
 using PrimeVilla_Web.Models;
@@ -55,17 +56,33 @@ namespace PrimeVilla_Web.Controllers
         [HttpGet]
         public IActionResult Register()
         {
+            var roleList = new List<SelectListItem>()
+            {
+                new SelectListItem { Text = SD.Admin, Value = SD.Admin},
+                new SelectListItem { Text = SD.Customer, Value = SD.Customer }
+            };
+            ViewBag.RoleList = roleList;
             return View();
         }
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Register(RegisterationRequestDTO obj)
         {
+            if (string.IsNullOrEmpty(obj.Role))
+            {
+                obj.Role = SD.Customer;
+            }
             APIResponse result = await _authService.RegisterAsync<APIResponse>(obj);
             if(result != null && result.IsSuccess)
             {
                 return RedirectToAction("Login");
             }
+            var roleList = new List<SelectListItem>()
+            {
+                new SelectListItem { Text = SD.Admin, Value = SD.Admin},
+                new SelectListItem { Text = SD.Customer, Value = SD.Customer }
+            };
+            ViewBag.RoleList = roleList;
             return View();
         }
 

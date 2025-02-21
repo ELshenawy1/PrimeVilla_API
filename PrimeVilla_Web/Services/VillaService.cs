@@ -22,7 +22,8 @@ namespace PrimeVilla_Web.Services
                 ApiType = SD.ApiType.Post,
                 Data = dto,
                 Url = villaUrl + $"/api/{SD.ApiVersion}/VillaApi",
-                Token = token
+                Token = token,
+                ContentType = SD.ContentType.MultipartFormData
             });
         }
 
@@ -63,7 +64,8 @@ namespace PrimeVilla_Web.Services
                 ApiType = SD.ApiType.Put,
                 Data = dto,
                 Url = villaUrl + $"/api/{SD.ApiVersion}/VillaApi/" + dto.Id,
-                Token = token
+                Token = token,
+                ContentType = SD.ContentType.MultipartFormData
             });
         }
     }

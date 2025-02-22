@@ -12,13 +12,15 @@ namespace PrimeVilla_Web.Services
     {
         public APIResponse responseModel { get; set; }
         public IHttpClientFactory httpClient { get; set; }
-        public BaseService(IHttpClientFactory httpClient)
+        private readonly ITokenProvider _tokenProvider;
+        public BaseService(IHttpClientFactory httpClient, ITokenProvider tokenProvider)
         {
             this.httpClient = httpClient;
             this.responseModel = new();
+            _tokenProvider = tokenProvider;
         }
 
-        public async Task<T> SendAsync<T>(APIRequest apiRequest)
+        public async Task<T> SendAsync<T>(APIRequest apiRequest, bool withBearer = true)
         {
             try
             {
@@ -26,6 +28,11 @@ namespace PrimeVilla_Web.Services
                 HttpRequestMessage message = new HttpRequestMessage();
                 message.Headers.Add("Accept", (apiRequest.ContentType == SD.ContentType.Json) ? "application/json" : "*/*");
                 message.RequestUri = new Uri(apiRequest.Url);
+                if(withBearer && _tokenProvider.GetToken() != null)
+                {
+                    var token = _tokenProvider.GetToken();
+                    client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token.AccessToken);
+                }
 
                 if(apiRequest.ContentType == SD.ContentType.MultipartFormData)
                 {
@@ -76,10 +83,10 @@ namespace PrimeVilla_Web.Services
 
                 HttpResponseMessage apiResponse = null;
 
-                if (!string.IsNullOrEmpty(apiRequest.Token))
-                {
-                    client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer" , apiRequest.Token);
-                }
+                //if (!string.IsNullOrEmpty(apiRequest.Token))
+                //{
+                //    client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer" , apiRequest.Token);
+                //}
 
                 apiResponse = await client.SendAsync(message);
                 var apiContent = await apiResponse.Content.ReadAsStringAsync();

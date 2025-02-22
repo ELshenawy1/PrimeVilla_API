@@ -17,6 +17,7 @@ namespace PrimeVilla_Web.Controllers
         private readonly IVillaNumberService _villaNumberService;
         private readonly IVillaService _villaService;
         private readonly IMapper _mapper;
+
         public VillaNumberController(IVillaNumberService villaNumberService, IMapper mapper, IVillaService villaService)
         {
             _villaNumberService = villaNumberService;
@@ -27,7 +28,7 @@ namespace PrimeVilla_Web.Controllers
         {
             List<VillaNumberDTO> list = new();
 
-            var response = await _villaNumberService.GetAllAsync<APIResponse>(HttpContext.Session.GetString(SD.SessionToken));
+            var response = await _villaNumberService.GetAllAsync<APIResponse>();
 
             if (response != null && response.IsSuccess)
             {
@@ -40,7 +41,7 @@ namespace PrimeVilla_Web.Controllers
         public async Task<IActionResult> CreateVillaNumber()
         {
             VillaNumberCreateVM villaNumberVM = new();
-            var response = await _villaService.GetAllAsync<APIResponse>(HttpContext.Session.GetString(SD.SessionToken));
+            var response = await _villaService.GetAllAsync<APIResponse>();
             if (response != null && response.IsSuccess)
             {
                 villaNumberVM.VillaList = JsonConvert.DeserializeObject<List<VillaDTO>>(response.Result.ToString()).Select(i => new SelectListItem()
@@ -59,7 +60,7 @@ namespace PrimeVilla_Web.Controllers
         {
             if (ModelState.IsValid)
             {
-                var response = await _villaNumberService.CreateAsync<APIResponse>(model.VillaNumber, HttpContext.Session.GetString(SD.SessionToken));
+                var response = await _villaNumberService.CreateAsync<APIResponse>(model.VillaNumber);
                 if (response != null && response.IsSuccess)
                 {
                     TempData["success"] = "Villa Number Created Successfully";
@@ -74,7 +75,7 @@ namespace PrimeVilla_Web.Controllers
                 }
 
             }
-            var villaResponse = await _villaService.GetAllAsync<APIResponse>(HttpContext.Session.GetString(SD.SessionToken));
+            var villaResponse = await _villaService.GetAllAsync<APIResponse>();
             if (villaResponse != null && villaResponse.IsSuccess)
             {
                 model.VillaList = JsonConvert.DeserializeObject<List<VillaDTO>>(villaResponse.Result.ToString()).Select(i => new SelectListItem()
@@ -90,7 +91,7 @@ namespace PrimeVilla_Web.Controllers
         public async Task<IActionResult> UpdateVillaNumber(int VillaNo)
         {
             VillaNumberUpdateVM villaNumberVM = new();
-            var response = await _villaNumberService.GetAsync<APIResponse>(VillaNo, HttpContext.Session.GetString(SD.SessionToken));
+            var response = await _villaNumberService.GetAsync<APIResponse>(VillaNo);
             if (response != null && response.IsSuccess)
             {
                 VillaNumberDTO model = JsonConvert.DeserializeObject<VillaNumberDTO>(response.Result.ToString());
@@ -99,7 +100,7 @@ namespace PrimeVilla_Web.Controllers
             else
                 return NotFound();
 
-            response = await _villaService.GetAllAsync<APIResponse>(HttpContext.Session.GetString(SD.SessionToken));
+            response = await _villaService.GetAllAsync<APIResponse>();
             if (response != null && response.IsSuccess)
             {
                 villaNumberVM.VillaList = JsonConvert.DeserializeObject<List<VillaDTO>>(response.Result.ToString()).Select(i => new SelectListItem()
@@ -120,7 +121,7 @@ namespace PrimeVilla_Web.Controllers
         {
             if (ModelState.IsValid)
             {
-                var response = await _villaNumberService.UpdateAsync<APIResponse>(model.VillaNumber, HttpContext.Session.GetString(SD.SessionToken));
+                var response = await _villaNumberService.UpdateAsync<APIResponse>(model.VillaNumber);
                 if (response != null && response.IsSuccess)
                 {
                     TempData["success"] = "Villa Number Updated Successfully";
@@ -134,7 +135,7 @@ namespace PrimeVilla_Web.Controllers
                     }
                 }
             }
-            var villaResponse = await _villaService.GetAllAsync<APIResponse>(HttpContext.Session.GetString(SD.SessionToken));
+            var villaResponse = await _villaService.GetAllAsync<APIResponse>();
             if (villaResponse != null && villaResponse.IsSuccess)
             {
                 model.VillaList = JsonConvert.DeserializeObject<List<VillaDTO>>(villaResponse.Result.ToString()).Select(i => new SelectListItem()
@@ -151,14 +152,14 @@ namespace PrimeVilla_Web.Controllers
         public async Task<IActionResult> DeleteVillaNumber(int VillaNo)
         {
             VillaNumberDeleteVM villaNumberVM = new();
-            var response = await _villaNumberService.GetAsync<APIResponse>(VillaNo, HttpContext.Session.GetString(SD.SessionToken));
+            var response = await _villaNumberService.GetAsync<APIResponse>(VillaNo);
             if (response != null && response.IsSuccess)
             {
                 var model = JsonConvert.DeserializeObject<VillaNumberDTO>(response.Result.ToString());
                 villaNumberVM.VillaNumber = model;
             }
 
-            response = await _villaService.GetAllAsync<APIResponse>(HttpContext.Session.GetString(SD.SessionToken));
+            response = await _villaService.GetAllAsync<APIResponse>();
             if (response != null && response.IsSuccess)
             {
                 villaNumberVM.VillaList = JsonConvert.DeserializeObject<List<VillaDTO>>(response.Result.ToString()).Select(i => new SelectListItem()
@@ -177,7 +178,7 @@ namespace PrimeVilla_Web.Controllers
         {
             if (ModelState.IsValid)
             {
-                var response = await _villaNumberService.DeleteAsync<APIResponse>(model.VillaNumber.VillaNo, HttpContext.Session.GetString(SD.SessionToken));
+                var response = await _villaNumberService.DeleteAsync<APIResponse>(model.VillaNumber.VillaNo);
 
                 if (response != null && response.IsSuccess)
                 {
@@ -185,7 +186,7 @@ namespace PrimeVilla_Web.Controllers
                     return RedirectToAction(nameof(IndexVillaNumber));
                 }
             }
-            var villaResponse = await _villaService.GetAllAsync<APIResponse>(HttpContext.Session.GetString(SD.SessionToken));
+            var villaResponse = await _villaService.GetAllAsync<APIResponse>();
             if (villaResponse != null && villaResponse.IsSuccess)
             {
                 model.VillaList = JsonConvert.DeserializeObject<List<VillaDTO>>(villaResponse.Result.ToString()).Select(i => new SelectListItem()

@@ -38,7 +38,7 @@ namespace PrimeVilla_VillaAPI.Repository
             return (user == null);
         } 
 
-        public async Task<LoginResponseDTO> Login(LoginRequestDTO loginRequestDTO)
+        public async Task<TokenDTO> Login(LoginRequestDTO loginRequestDTO)
         {
             var user = await _db.ApplicationUsers
                 .FirstOrDefaultAsync(u => u.UserName.ToLower() == loginRequestDTO.UserName.ToLower());
@@ -47,36 +47,19 @@ namespace PrimeVilla_VillaAPI.Repository
 
             if (user == null || isValid == false)   
             {
-                return new LoginResponseDTO()
+                return new TokenDTO()
                 {
-                    Token = "",
-                    User = null
+                    AccessToken = ""
                 };
             }
 
-            var roles = await _userManager.GetRolesAsync(user);
-            var tokenHandler = new JwtSecurityTokenHandler();
-            var key = Encoding.ASCII.GetBytes(secretKey);
+            var accessToken = await GetAccessToken(user);
 
-            var tokenDescripttor = new SecurityTokenDescriptor
+            TokenDTO tokenDto = new()
             {
-                Subject = new ClaimsIdentity(new Claim[]
-                {
-                    new Claim(ClaimTypes.Name, user.UserName.ToString()),
-                    new Claim(ClaimTypes.Role, roles.FirstOrDefault())
-                }),
-                Expires = DateTime.UtcNow.AddDays(7),
-                SigningCredentials = new(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+                AccessToken = accessToken
             };
-
-            var token = tokenHandler.CreateToken(tokenDescripttor);
-
-            LoginResponseDTO loginResponseDTO = new()
-            {
-                Token = tokenHandler.WriteToken(token),
-                User = _mapper.Map<UserDTO>(user)
-            };
-            return (loginResponseDTO);
+            return (tokenDto);
 
 
         }
@@ -111,6 +94,28 @@ namespace PrimeVilla_VillaAPI.Repository
             }
 
             return new UserDTO();
+        }
+
+        private async Task<string> GetAccessToken(ApplicationUser user)
+        {
+            var roles = await _userManager.GetRolesAsync(user);
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var key = Encoding.ASCII.GetBytes(secretKey);
+
+            var tokenDescripttor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(new Claim[]
+                {
+                    new Claim(ClaimTypes.Name, user.UserName.ToString()),
+                    new Claim(ClaimTypes.Role, roles.FirstOrDefault())
+                }),
+                Expires = DateTime.UtcNow.AddDays(7),
+                SigningCredentials = new(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+            };
+
+            var token = tokenHandler.CreateToken(tokenDescripttor);
+            var tokenStr = tokenHandler.WriteToken(token);
+            return tokenStr;
         }
     }
 }

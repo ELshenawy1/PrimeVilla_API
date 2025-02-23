@@ -14,6 +14,7 @@ namespace PrimeVilla_Web.Services
         public void ClearTokne()
         {
             _contextAccessor.HttpContext?.Response.Cookies.Delete(SD.AccessToken);
+            _contextAccessor.HttpContext?.Response.Cookies.Delete(SD.RefreshToken);
         }
 
         public TokenDTO GetToken()
@@ -21,13 +22,16 @@ namespace PrimeVilla_Web.Services
             try
             {
                 bool hasAccessToken = _contextAccessor.HttpContext.Request.Cookies.TryGetValue(SD.AccessToken, out string accessToken);
+                bool hasRefreshToken = _contextAccessor.HttpContext.Request.Cookies.TryGetValue(SD.RefreshToken, out string refreshToken);
+
                 TokenDTO tokenDto = new()
                 {
-                    AccessToken = accessToken
+                    AccessToken = accessToken,
+                    RefreshToken = refreshToken
                 };
-                return hasAccessToken ? tokenDto : null;
+                return (hasAccessToken && hasRefreshToken) ? tokenDto : null;
             }
-            catch (Exception ex)
+            catch
             {
                 return null;
             }
@@ -37,6 +41,7 @@ namespace PrimeVilla_Web.Services
         {
             var cookieOptions = new CookieOptions { Expires = DateTime.UtcNow.AddMinutes(59) };
             _contextAccessor.HttpContext?.Response.Cookies.Append(SD.AccessToken,tokenDto.AccessToken, cookieOptions);
+            _contextAccessor.HttpContext?.Response.Cookies.Append(SD.RefreshToken,tokenDto.RefreshToken, cookieOptions);
         }
     }
 }

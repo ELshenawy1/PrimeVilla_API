@@ -102,7 +102,7 @@ namespace PrimeVilla_Web.Services
                         return returnObject;
                     }
                 }
-                catch(Exception ex)
+                catch
                 {
                     var exceptionResponse = JsonConvert.DeserializeObject<T>(apiContent);
                     return exceptionResponse;

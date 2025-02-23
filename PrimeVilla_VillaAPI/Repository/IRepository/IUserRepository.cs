@@ -8,6 +8,8 @@ namespace PrimeVilla_VillaAPI.Repository.IRepository
         Task<bool> IsUniqueUser(string username);
         Task<TokenDTO> Login(LoginRequestDTO loginRequestDTO);
         Task<UserDTO> Register(RegisterationRequestDTO registerationRequestDTO);
+        Task<TokenDTO> RefreshAccessToken(TokenDTO tokenDTO);
+
     }
 }
  

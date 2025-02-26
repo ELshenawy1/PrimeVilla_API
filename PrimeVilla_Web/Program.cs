@@ -2,19 +2,21 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.IdentityModel.Tokens;
 using PrimeVilla_Web;
+using PrimeVilla_Web.Extensions;
 using PrimeVilla_Web.Services;
 using PrimeVilla_Web.Services.IServices;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddControllersWithViews();
+builder.Services.AddControllersWithViews(u=>u.Filters.Add(new AuthExceptionRedirection()));
 builder.Services.AddAutoMapper(typeof(MappingConfig));
 
 builder.Services.AddHttpClient<IVillaService, VillaService>();
 builder.Services.AddHttpClient<IAuthService, AuthService>();
 builder.Services.AddHttpClient<IVillaNumberService, VillaNumberService>();
 
+builder.Services.AddSingleton<IApiMessageRequestBuilder, ApiMessageRequestBuilder>();
 builder.Services.AddScoped<IBaseService, BaseService>();
 builder.Services.AddScoped<IVillaService, VillaService>();
 builder.Services.AddScoped<ITokenProvider, TokenProvider>();

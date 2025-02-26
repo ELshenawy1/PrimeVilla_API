@@ -68,10 +68,9 @@ namespace PrimeVilla_Web.Controllers
                 }
                 else
                 {
-                    if (response.ErrorMessages?.Count > 0)
-                    {
-                        ModelState.AddModelError("ErrorMessages", response.ErrorMessages?.FirstOrDefault());
-                    }
+                    TempData["error"] = (response.ErrorMessages!= null && response.ErrorMessages.Count>0) 
+                        ? response.ErrorMessages[0] 
+                        : "Error Encountered";
                 }
 
             }
@@ -110,10 +109,15 @@ namespace PrimeVilla_Web.Controllers
                 });
                 return View(villaNumberVM);
             }
+            else
+            {
+                TempData["error"] = (response.ErrorMessages != null && response.ErrorMessages.Count > 0)
+                    ? response.ErrorMessages[0]
+                    : "Error Encountered";
+            }
             return NotFound();
         }
 
-        [Authorize(Roles = "admin")]
         [HttpPost]
         [AutoValidateAntiforgeryToken]
         [Authorize(Roles = "admin")]
@@ -129,10 +133,9 @@ namespace PrimeVilla_Web.Controllers
                 }
                 else
                 {
-                    if (response.ErrorMessages?.Count > 0)
-                    {
-                        ModelState.AddModelError("ErrorMessages", response.ErrorMessages?.FirstOrDefault());
-                    }
+                    TempData["error"] = (response.ErrorMessages != null && response.ErrorMessages.Count > 0)
+                        ? response.ErrorMessages[0]
+                        : "Error Encountered";
                 }
             }
             var villaResponse = await _villaService.GetAllAsync<APIResponse>();
@@ -144,7 +147,6 @@ namespace PrimeVilla_Web.Controllers
                     Value = i.Id.ToString()
                 });
             }
-            TempData["error"] = "Error encountered!";
             return View(model);
         }
 
@@ -176,16 +178,19 @@ namespace PrimeVilla_Web.Controllers
         [HttpPost]
         public async Task<IActionResult> DeleteVillaNumber(VillaNumberDeleteVM model)
         {
-            if (ModelState.IsValid)
+            var response = await _villaNumberService.DeleteAsync<APIResponse>(model.VillaNumber.VillaNo);
+            if (response != null && response.IsSuccess)
             {
-                var response = await _villaNumberService.DeleteAsync<APIResponse>(model.VillaNumber.VillaNo);
-
-                if (response != null && response.IsSuccess)
-                {
-                    TempData["success"] = "Villa Number Deleted Successfully";
-                    return RedirectToAction(nameof(IndexVillaNumber));
-                }
+                TempData["success"] = "Villa Number Deleted Successfully";
+                return RedirectToAction(nameof(IndexVillaNumber));
             }
+            else
+            {
+                TempData["error"] = (response.ErrorMessages != null && response.ErrorMessages.Count > 0)
+                    ? response.ErrorMessages[0]
+                    : "Error Encountered";
+            }
+
             var villaResponse = await _villaService.GetAllAsync<APIResponse>();
             if (villaResponse != null && villaResponse.IsSuccess)
             {

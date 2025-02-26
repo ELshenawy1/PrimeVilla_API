@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage.Json;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.VisualBasic;
 using PrimeVilla_VillaAPI.Data;
@@ -20,10 +21,10 @@ namespace PrimeVilla_VillaAPI.Repository
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly IMapper _mapper;
         private string secretKey;
-        public UserRepository(ApplicationDbContext db, 
-            IConfiguration configuration, 
+        public UserRepository(ApplicationDbContext db,
+            IConfiguration configuration,
             UserManager<ApplicationUser> userManager,
-            RoleManager<IdentityRole> roleManager, 
+            RoleManager<IdentityRole> roleManager,
             IMapper mapper)
         {
             _mapper = mapper;
@@ -37,7 +38,7 @@ namespace PrimeVilla_VillaAPI.Repository
         {
             var user = await _db.ApplicationUsers.FirstOrDefaultAsync(u => u.UserName == username);
             return (user == null);
-        } 
+        }
 
         public async Task<TokenDTO> Login(LoginRequestDTO loginRequestDTO)
         {
@@ -46,7 +47,7 @@ namespace PrimeVilla_VillaAPI.Repository
 
             bool isValid = await _userManager.CheckPasswordAsync(user, loginRequestDTO.Password);
 
-            if (user == null || isValid == false)   
+            if (user == null || isValid == false)
             {
                 return new TokenDTO()
                 {
@@ -55,7 +56,7 @@ namespace PrimeVilla_VillaAPI.Repository
             }
             var jwtTokenId = $"JTI{Guid.NewGuid()}";
 
-            var accessToken = await GetAccessToken(user,jwtTokenId);
+            var accessToken = await GetAccessToken(user, jwtTokenId);
 
             var refreshToken = await CreateNewRefreshToken(user.Id, jwtTokenId);
 
@@ -80,7 +81,7 @@ namespace PrimeVilla_VillaAPI.Repository
 
             try
             {
-                var result = await _userManager.CreateAsync(user,registerationRequestDTO.Password);
+                var result = await _userManager.CreateAsync(user, registerationRequestDTO.Password);
                 if (result.Succeeded)
                 {
                     if (!await _roleManager.RoleExistsAsync(registerationRequestDTO.Role))
@@ -100,7 +101,7 @@ namespace PrimeVilla_VillaAPI.Repository
             return new UserDTO();
         }
 
-        private async Task<string> GetAccessToken(ApplicationUser user,string jwtTokenId)
+        private async Task<string> GetAccessToken(ApplicationUser user, string jwtTokenId)
         {
             var roles = await _userManager.GetRolesAsync(user);
             var tokenHandler = new JwtSecurityTokenHandler();
@@ -124,6 +125,20 @@ namespace PrimeVilla_VillaAPI.Repository
             var tokenStr = tokenHandler.WriteToken(token);
             return tokenStr;
         }
+        public async Task RevokeRefreshToken(TokenDTO tokenDTO)
+        {
+            var existingRefreshToken = await _db.RefreshTokens.FirstOrDefaultAsync(r => r.Refresh_Token == tokenDTO.RefreshToken);
+            if (existingRefreshToken == null)
+                return;
+
+            var isTokenValid = GetAccessTokenData(tokenDTO.AccessToken, existingRefreshToken.UserId, existingRefreshToken.JwtTokenId);
+            if (!isTokenValid)
+            {
+                return;
+            }
+
+            await MarkAllTokenInChainAsInvalid(existingRefreshToken.UserId , existingRefreshToken.JwtTokenId);
+        }
 
         public async Task<TokenDTO> RefreshAccessToken(TokenDTO tokenDTO)
         {
@@ -135,31 +150,23 @@ namespace PrimeVilla_VillaAPI.Repository
             }
 
             //Compare data from existing refresh and access token provided and if there is any missmatch then consider it as a fraud - e7tial
-            var accessTokenData = GetAccessTokenData(tokenDTO.AccessToken);
-            if (!accessTokenData.isSuccessful
-                || accessTokenData.userId != existingRefreshToken.UserId
-                || accessTokenData.tokenId != existingRefreshToken.JwtTokenId)
+            var isTokenValid = GetAccessTokenData(tokenDTO.AccessToken, existingRefreshToken.UserId, existingRefreshToken.JwtTokenId);
+            if (!isTokenValid)
             {
-                existingRefreshToken.IsValid = false;
-                await _db.SaveChangesAsync();
+                await MarkTokenAsInvalid(existingRefreshToken);
                 return new TokenDTO();
             }
 
             //When someone tries to use not valid refresh token, fraud possible
             if (!existingRefreshToken.IsValid)
             {
-                var chainRecords = await _db.RefreshTokens.Where(u => u.UserId == existingRefreshToken.UserId
-                && u.JwtTokenId == existingRefreshToken.JwtTokenId)
-                    .ExecuteUpdateAsync(u => u.SetProperty(refreshToken => refreshToken.IsValid, false));
-               
-                return new TokenDTO();
+                await MarkAllTokenInChainAsInvalid(existingRefreshToken.UserId, existingRefreshToken.JwtTokenId);
             }
 
             //If just expired then mark as invalid and return empty 
             if (existingRefreshToken.ExpiresAt < DateTime.UtcNow)
             {
-                existingRefreshToken.IsValid = false;
-                await _db.SaveChangesAsync();
+                await MarkTokenAsInvalid(existingRefreshToken);
                 return new TokenDTO();
             }
 
@@ -167,12 +174,11 @@ namespace PrimeVilla_VillaAPI.Repository
             var newRefreshToken = await CreateNewRefreshToken(existingRefreshToken.UserId, existingRefreshToken.JwtTokenId);
 
             //Revoke existing refresh token
-            existingRefreshToken.IsValid = false;
-            await _db.SaveChangesAsync();
+            await MarkTokenAsInvalid(existingRefreshToken);
 
-            //Generate new access token
-            var applicationUser = await _db.ApplicationUsers.FirstOrDefaultAsync(u => u.Id == existingRefreshToken.UserId);
-            if(applicationUser == null)
+                        //Generate new access token
+                        var applicationUser = await _db.ApplicationUsers.FirstOrDefaultAsync(u => u.Id == existingRefreshToken.UserId);
+            if (applicationUser == null)
             {
                 return new TokenDTO();
             }
@@ -192,7 +198,7 @@ namespace PrimeVilla_VillaAPI.Repository
                 IsValid = true,
                 UserId = userId,
                 JwtTokenId = tokenId,
-                ExpiresAt = DateTime.UtcNow.AddMinutes(3),
+                ExpiresAt = DateTime.UtcNow.AddMinutes(2),
                 Refresh_Token = Guid.NewGuid() + "-" + Guid.NewGuid(),
             };
             await _db.RefreshTokens.AddAsync(refreshToken);
@@ -200,21 +206,37 @@ namespace PrimeVilla_VillaAPI.Repository
             return refreshToken.Refresh_Token;
         }
 
-        private (bool isSuccessful , string userId, string tokenId) GetAccessTokenData(string accessToken)
+        private bool GetAccessTokenData(string accessToken, string expectedUserId, string expectedTokenId)
         {
             try
             {
                 var tokenHandler = new JwtSecurityTokenHandler();
                 var jwt = tokenHandler.ReadJwtToken(accessToken);
                 var jwtTokenId = jwt.Claims.FirstOrDefault(u => u.Type == JwtRegisteredClaimNames.Jti).Value;
-                var userId = jwt.Claims.FirstOrDefault(u=> u.Type == JwtRegisteredClaimNames.Sub).Value;
-                return (true, userId, jwtTokenId);
+                var userId = jwt.Claims.FirstOrDefault(u => u.Type == JwtRegisteredClaimNames.Sub).Value;
+                return (userId == expectedUserId && jwtTokenId == expectedTokenId);
             }
             catch
             {
-                return (false, null, null);
+                return false;
             }
         }
+
+        private async Task MarkAllTokenInChainAsInvalid(string userId, string tokenId)
+        {
+            await _db.RefreshTokens.Where(u => u.UserId == userId
+                && u.JwtTokenId == tokenId)
+                    .ExecuteUpdateAsync(u => u.SetProperty(refreshToken => refreshToken.IsValid, false));
+
+
+        }
+
+        private Task MarkTokenAsInvalid(RefreshToken refreshToken)
+        {
+            refreshToken.IsValid = false;
+            return _db.SaveChangesAsync();
+        }
+
 
     }
 }

@@ -87,5 +87,21 @@ namespace PrimeVilla_VillaAPI.Controllers
                 return BadRequest(_response);
             }
         }
+
+        [HttpPost("Revoke")]
+        public async Task<IActionResult> RevokeRefreshToken([FromBody] TokenDTO tokenDto)
+        {
+            if (ModelState.IsValid)
+            {
+                await _userRepo.RevokeRefreshToken(tokenDto);
+                _response.IsSuccess = true;
+                _response.StatusCode = HttpStatusCode.OK;
+                return Ok(_response);
+            }
+
+            _response.IsSuccess = false;
+            _response.Result = "INvalid Input";
+            return BadRequest(_response);   
+        }
     }
 }

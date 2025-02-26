@@ -44,7 +44,7 @@ namespace PrimeVilla_Web.Services
             {
                 ApiType = SD.ApiType.Get,
                 Url = villaUrl + $"/api/{SD.ApiVersion}/VillaApi"
-            });
+            },withBearer:false);
         }
 
         public async Task<T> GetAsync<T>(int id)

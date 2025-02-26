@@ -27,6 +27,16 @@ namespace PrimeVilla_Web.Services
             },withBearer:false);
         }
 
+        public async Task<T> LogoutAsync<T>(TokenDTO tokenDto)
+        {
+            return await _baseService.SendAsync<T>(new APIRequest()
+            {
+                ApiType = SD.ApiType.Post,
+                Data = tokenDto,
+                Url = villaUrl + $"/api/{SD.ApiVersion}/UserAuth/Revoke"
+            });
+        }
+
         public async Task<T> RegisterAsync<T>(RegisterationRequestDTO obj)
         {
             return await _baseService.SendAsync<T>(new APIRequest()
